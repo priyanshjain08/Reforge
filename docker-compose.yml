@@ -1,0 +1,54 @@
+# REFORGE demo stack. Everything runs inside this compose network; chaos only targets the demo services.
+services:
+  core:
+    build: ./apps/core
+    environment:
+      REFORGE_ADMIN_TOKEN: ${REFORGE_ADMIN_TOKEN:?run scripts/setup.ps1 (or copy .env.example to .env)}
+      REFORGE_VIEWER_TOKEN: ${REFORGE_VIEWER_TOKEN:-}
+      REFORGE_AGENT_SECRET: ${REFORGE_AGENT_SECRET:?run scripts/setup.ps1 (or copy .env.example to .env)}
+      REFORGE_INTELLIGENCE_URL: http://intelligence:8001
+      REFORGE_RECOVERY_MODE: ${REFORGE_RECOVERY_MODE:-approval}
+      REFORGE_SEED_DEMO: "true"
+      REFORGE_DATA_DIR: /data
+    volumes: ["reforge-data:/data"]
+    depends_on: [intelligence]
+    ports: ["8080:8080"]
+
+  intelligence:
+    build: ./apps/intelligence
+
+  agent:
+    build: ./apps/agent
+    environment:
+      REFORGE_CORE_URL: http://core:8080
+      REFORGE_AGENT_ID: agent-demo
+      REFORGE_AGENT_SECRET: ${REFORGE_AGENT_SECRET:?run scripts/setup.ps1 (or copy .env.example to .env)}
+      REFORGE_AGENT_TARGETS: payment-service,user-service,inventory-service
+    # The Docker socket gives this agent container control; it is limited in code to restarting the 3 demo targets.
+    # Demo use only. See docs/security.md.
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    depends_on: [core]
+
+  dashboard:
+    build: ./apps/dashboard
+    ports: ["3000:80"]
+    depends_on: [core]
+
+  payment-service:
+    build: ./infrastructure/chaos-lab/demo-service
+    container_name: payment-service
+    environment: { SERVICE_NAME: payment-service }
+    restart: "no"
+  user-service:
+    build: ./infrastructure/chaos-lab/demo-service
+    container_name: user-service
+    environment: { SERVICE_NAME: user-service }
+    restart: "no"
+  inventory-service:
+    build: ./infrastructure/chaos-lab/demo-service
+    container_name: inventory-service
+    environment: { SERVICE_NAME: inventory-service }
+    restart: "no"
+
+volumes:
+  reforge-data:
