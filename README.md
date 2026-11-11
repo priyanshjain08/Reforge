@@ -50,19 +50,6 @@ macOS/Linux: use `./scripts/setup.sh` instead of step 3.
 - Diagnoses are labelled **suspected** unless a direct observation confirms them, and always show their evidence.
 - The audit log is append-only through the API. See `docs/security.md`.
 
-## Push to GitHub
-1. Create an empty repository on github.com (no README).
-2. In PowerShell inside this folder:
-   ```powershell
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/YOUR-NAME/reforge.git
-   git push -u origin main
-   ```
-   `.env` is git-ignored, so your secrets are not uploaded.
-3. Open the **Actions** tab. The CI workflow compiles and tests the Go, Python and React code on GitHub's servers. If something is red, open it and copy the error message.
 
 ## Honest status
 
